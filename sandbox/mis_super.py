@@ -68,59 +68,61 @@ class Workload:
 
 @pk.functor(indices = pk.ViewTypeInfo(space=pk.CudaSpace),
             indptr  = pk.ViewTypeInfo(space=pk.CudaSpace))
-class _Workload():
+class _Workload(Workload):
     def __init__(self, indices: pk.View1D[int], indptr: pk.View1D[int]):
-        self.size: int = len(indptr) - 1
-
-        # init variable list
-        self.done: pk.View1D[int] = pk.View([1], int)
-        self.priority: pk.View1D[int] = pk.View([self.size], int)
-        self.status: pk.View1D[int] = pk.View([self.size], int)
-
-        # graph info needed (CSR minus data array)
-        # make const later
-        self.indices: pk.View1D[int] = indices
-        self.indptr : pk.View1D[int] = indptr
-
-        # init random priorites and set status to undecided (-1)
-        s = set()
-        for idx in range(self.size):
-            r = 0
-            while len(s) == idx:
-                r = random.randint(1,self.size)
-                s.add(r)
-            self.priority[idx] = r
-            self.status[idx] = -1
-
-        # set completion status to False (0)
-        self.done[0] = 0
-  
+      super().__init__(indices, indptr)
+#        self.size: int = len(indptr) - 1
+#
+#        # init variable list
+#        self.done: pk.View1D[int] = pk.View([1], int)
+#        self.priority: pk.View1D[int] = pk.View([self.size], int)
+#        self.status: pk.View1D[int] = pk.View([self.size], int)
+#
+#        # graph info needed (CSR minus data array)
+#        # make const later
+#        self.indices: pk.View1D[int] = indices
+#        self.indptr : pk.View1D[int] = indptr
+#
+#        # init random priorites and set status to undecided (-1)
+#        s = set()
+#        for idx in range(self.size):
+#            r = 0
+#            while len(s) == idx:
+#                r = random.randint(1,self.size)
+#                s.add(r)
+#            self.priority[idx] = r
+#            self.status[idx] = -1
+#
+#        # set completion status to False (0)
+#        self.done[0] = 0
+#  
     # find maximum independent set
     @pk.workunit
     def compute_kernel(self, i: int):
-        d : int = 0
-        # check if self is undecided (-1)
-        if self.status[i] == -1:
-            best: int = 1
-            # figure out if a neighbor has a higher priority
-            for j in range(self.indptr[i], self.indptr[i+1]):
-                neighbor: int = self.indices[j]
-                if neighbor == -1:
-                    break
-                if self.status[neighbor] != 0:
-                    if self.priority[i] < self.priority[neighbor]:
-                        best = 0
-                        break
-            # if highest priority among neighbors, set self to in (1)
-            # set all neighbors to out (0)
-            if best == 1:
-                self.status[i] = 1
-                for j in range(indptr[i], self.indptr[i+1]):
-                    neighbor: int  = self.indices[j]
-                    self.status[neighbor] = 0
-            # might need another round to check resolution status (0)
-            else:
-                self.done[0] = 0
+      super().compute_kernel(i)
+#        d : int = 0
+#        # check if self is undecided (-1)
+#        if self.status[i] == -1:
+#            best: int = 1
+#            # figure out if a neighbor has a higher priority
+#            for j in range(self.indptr[i], self.indptr[i+1]):
+#                neighbor: int = self.indices[j]
+#                if neighbor == -1:
+#                    break
+#                if self.status[neighbor] != 0:
+#                    if self.priority[i] < self.priority[neighbor]:
+#                        best = 0
+#                        break
+#            # if highest priority among neighbors, set self to in (1)
+#            # set all neighbors to out (0)
+#            if best == 1:
+#                self.status[i] = 1
+#                for j in range(indptr[i], self.indptr[i+1]):
+#                    neighbor: int  = self.indices[j]
+#                    self.status[neighbor] = 0
+#            # might need another round to check resolution status (0)
+#            else:
+#                self.done[0] = 0
 
 
 def run(G: nx.Graph, verbosity, space) -> None:

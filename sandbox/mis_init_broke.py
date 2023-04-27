@@ -68,33 +68,33 @@ class Workload:
 
 @pk.functor(indices = pk.ViewTypeInfo(space=pk.CudaSpace),
             indptr  = pk.ViewTypeInfo(space=pk.CudaSpace))
-class _Workload():
-    def __init__(self, indices: pk.View1D[int], indptr: pk.View1D[int]):
-        self.size: int = len(indptr) - 1
-
-        # init variable list
-        self.done: pk.View1D[int] = pk.View([1], int)
-        self.priority: pk.View1D[int] = pk.View([self.size], int)
-        self.status: pk.View1D[int] = pk.View([self.size], int)
-
-        # graph info needed (CSR minus data array)
-        # make const later
-        self.indices: pk.View1D[int] = indices
-        self.indptr : pk.View1D[int] = indptr
-
-        # init random priorites and set status to undecided (-1)
-        s = set()
-        for idx in range(self.size):
-            r = 0
-            while len(s) == idx:
-                r = random.randint(1,self.size)
-                s.add(r)
-            self.priority[idx] = r
-            self.status[idx] = -1
-
-        # set completion status to False (0)
-        self.done[0] = 0
-  
+class _Workload(Workload):
+#    def __init__(self, indices: pk.View1D[int], indptr: pk.View1D[int]):
+#        self.size: int = len(indptr) - 1
+#
+#        # init variable list
+#        self.done: pk.View1D[int] = pk.View([1], int)
+#        self.priority: pk.View1D[int] = pk.View([self.size], int)
+#        self.status: pk.View1D[int] = pk.View([self.size], int)
+#
+#        # graph info needed (CSR minus data array)
+#        # make const later
+#        self.indices: pk.View1D[int] = indices
+#        self.indptr : pk.View1D[int] = indptr
+#
+#        # init random priorites and set status to undecided (-1)
+#        s = set()
+#        for idx in range(self.size):
+#            r = 0
+#            while len(s) == idx:
+#                r = random.randint(1,self.size)
+#                s.add(r)
+#            self.priority[idx] = r
+#            self.status[idx] = -1
+#
+#        # set completion status to False (0)
+#        self.done[0] = 0
+#  
     # find maximum independent set
     @pk.workunit
     def compute_kernel(self, i: int):
